@@ -1,0 +1,21 @@
+{
+  "name": "dazzle",
+  "version": "1.0.0",
+  "description": "Razzle dazzle camouflage",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify ./js/index.js -d -g [uglifyify -x .js] | exorcist assets/build/bundle.js.map > assets/build/bundle.js",
+    "start": "budo js/index.js:assets/build/bundle.js --live --verbose | garnish"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "browserify": "^10.2.4",
+    "budo": "^4.1.0",
+    "exorcist": "^0.4.0",
+    "lodash": "^3.10.0",
+    "poem-loop": "^1.0.5",
+    "uglifyify": "^3.0.1",
+    "voronoi-diagram": "^1.0.1"
+  }
+}

@@ -1,0 +1,24 @@
+html, body {
+	width:100%;
+	height:100%;
+	position:relative;
+	margin:0;
+	padding:0;
+	font-size:16px;
+	box-sizing: border-box;
+}
+body * {
+	box-sizing: border-box;
+}
+.svg-wrapper {
+	width: 100%;
+	height: 100%;
+	padding: 4%;
+	background:#ccc;
+}
+svg {
+	background:#fff;
+	box-shadow:0 0 1em rgba(0,0,0,0.2);
+	width:100%;
+	height:100%;
+}
