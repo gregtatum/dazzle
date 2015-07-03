@@ -10,12 +10,20 @@
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "babelify": "^6.1.2",
     "browserify": "^10.2.4",
     "budo": "^4.1.0",
     "exorcist": "^0.4.0",
+    "gl-mat4": "^1.1.4",
     "lodash": "^3.10.0",
     "poem-loop": "^1.0.5",
+    "seedrandom": "^2.4.0",
     "uglifyify": "^3.0.1",
     "voronoi-diagram": "^1.0.1"
+  },
+  "browserify": {
+    "transform": [
+      "babelify"
+    ]
   }
 }
