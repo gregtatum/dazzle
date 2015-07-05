@@ -1,6 +1,7 @@
 var Voronoi = require('./voronoi')
 var DazzleFn = require('./dazzle')
 var SaveSvg = require('./utils/save-svg')
+
 function _drawFn( props ) {
 	
 	return function draw() {
@@ -36,7 +37,7 @@ function _drawFn( props ) {
 	}
 
 	var draw = _drawFn( props )
-	draw()
+	// draw()
 	
 	gui.addFolder('Voronoi')
 	gui.add(props.voronoi, 'overdraw', -0.4, 5).onFinishChange( draw )
