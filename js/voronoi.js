@@ -137,7 +137,7 @@ function _dropOutOfRangeLines( lines, centers, width, height, overdraw ) {
 module.exports = function( props, dazzle ) {
 	
 	var config = _.extend({
-		overdraw : 2,
+		scale : 2,
 		count : 200
 	}, props)
 	
@@ -150,7 +150,7 @@ module.exports = function( props, dazzle ) {
 		config.count,
 		$svg.width(),
 		$svg.height(),
-		config.overdraw
+		config.scale
 	)
 
 	var diagram = CreateVoronoiDiagram(allCenters)
@@ -161,7 +161,7 @@ module.exports = function( props, dazzle ) {
 		allCenters,
 		$svg.width(),
 		$svg.height(),
-		config.overdraw
+		config.scale
 	)
 	
 	// _drawCells( lines, $svg )

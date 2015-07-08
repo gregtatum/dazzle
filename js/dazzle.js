@@ -4,152 +4,18 @@ var SeedRandom = require('./utils/random')
 var Mat4 = require('gl-mat4')
 var Vec4 = require('gl-matrix').vec4
 var ConsoleMatrix = require('./utils/console-matrix')
+var PolygonBoolean = require('2d-polygon-boolean');
 
-function domDemo() {
-	
-	var $svg = $('#svg')
-	var height = $svg.height()
-	var width = $svg.width()
-	
-	var perspective = Mat4.perspective(
-		[],
-		Math.PI * 0.5, //fov
-		width / height, //ratio
-		height*0.1, //near
-		height*1.0 //far
-	)
-
-	var $div = $('<div></div>')
-	$div.appendTo($('body'))
-	$div.css({
-		width: "200px",
-		height: "200px",
-		backgroundColor : "#000",
-		position:"absolute",
-		marginTop:"-100px",
-		marginLeft:"-100px",
-		top: height/2+"px",
-		left: width/2+"px",
+function _multiplyLine( line, matrix ) {
+	return _.map(line, function( point ) {
+		var homogeneousPoint = [point[0], point[1], 0, 1]
+		var results = Vec4.transformMat4([], homogeneousPoint, matrix)
+		return [
+			results[0] / results[3],
+			results[1] / results[3]
+		]
 	})
-
-	var $div2 = $('<div></div>')
-	$div2.appendTo($('body'))
-	$div2.css({
-		width: "200px",
-		height: "200px",
-		backgroundColor : "rgba(0,0,0,0.1)",
-		position:"absolute",
-		marginTop:"-100px",
-		marginLeft:"-100px",
-		top: height/2+"px",
-		left: width/2+"px",
-	})
-	
-	var i = 0
-	var mat = _flipMatricesFn()
-	
-	function transform() {
-		
-		mat( true ) //reset
-		i += 0.005
-		
-		Mat4.scale     ( mat(), mat(), [height,height,height] ) //scale back from clip space
-		Mat4.multiply  ( mat(), mat(), perspective )            //project
-		Mat4.translate ( mat(), mat(), [0,0,-height] )          //camera position
-		Mat4.rotateY   ( mat(), mat(), Math.PI * i )            //rotate cube
-		
-		$div.css(
-			"transform",
-			_matrixArrayToCssMatrix( (mat(),mat()) )
-		)
-		
-		requestAnimationFrame( transform )
-	}
-	
-	transform()
-	
 }
-
-;(function svgDemo() {
-	
-	var $svg = $('#svg')
-	var height = $svg.height()
-	var width = $svg.width()
-	
-	var left = width/2-100
-	var right = width/2+100
-	var top = height/2-100
-	var bottom = height/2+100
-
-	var line = [
-		[left,top],
-		[right,top],
-		[right,bottom],
-		[left,bottom]
-	]
-	
-	function makePolygon( line, fill ) {
-		var $polygon = $(Svg.create('polygon'))
-		$svg.append( $polygon )
-		$polygon.attr({
-			fill : fill,
-			points: Svg.points( line )
-		})
-		
-		return $polygon
-	}
-	
-	function multiplyLine( line, matrix ) {
-		return _.map(line, function( point ) {
-			var homogeneousPoint = [point[0], point[1], 0, 1]
-			var results = Vec4.transformMat4([], homogeneousPoint, matrix)
-			return [
-				results[0] / results[3],
-				results[1] / results[3]
-			]
-		})
-	}
-	
-	var $polygon = makePolygon( line, "rgba(0,0,0,1)" )
-	// makePolyline( line, "rgba(0,0,0,0.3)" )
-	
-	var i = 0.1
-	var mat = _flipMatricesFn()
-
-	var perspective = Mat4.perspective(
-		[],
-		Math.PI * 0.5, //fov
-		width / height, //ratio
-		height*0.1, //near
-		height*1.0 //far
-	)
-	
-	function transform() {
-		
-		mat( true ) //reset
-		i += 0.005
-
-		//Read in reverse
-		Mat4.translate ( mat(), mat(), [width/2, height/2, 0] )     //back from origin
-		Mat4.scale     ( mat(), mat(), [height,height,height] )    //scale back from clip space
-		Mat4.multiply  ( mat(), mat(), perspective )               //project
-		Mat4.translate ( mat(), mat(), [0,0,-height] )             //camera position
-		Mat4.rotateY   ( mat(), mat(), Math.PI * i )               //rotate cube
-		Mat4.translate ( mat(), mat(), [-width/2, -height/2, 0] )  //to origin
-		
-		$polygon.attr(
-			"points",
-			Svg.points(
-				multiplyLine( line, (mat(),mat()) )
-			)
-		)
-		
-		requestAnimationFrame( transform )
-	}
-	
-	transform()
-	
-})()
 
 function _flipMatricesFn() {
 
@@ -221,66 +87,105 @@ function _cellBounds( line ) {
 	}
 }
 
-function _matrixArrayToCssMatrix(array) {
-	return "matrix3d(" + array.join(',') + ")";
-}
-
-function _rotationMatrix( theta, center ) {
+function _clipBarsFn( center, halfLength ) {
 	
-	var matA = [
-		1,0,0,0,
-		0,1,0,0,
-		0,0,1,0,
-		0,0,0,1
-	]
-	var matB = [
-		1,0,0,0,
-		0,1,0,0,
-		0,0,1,0,
-		0,0,0,1
+	var left = center[0] - halfLength
+	var right = center[0] + halfLength
+	var top = center[1] - halfLength
+	var bottom = center[1] + halfLength
+	
+	var bounds = [
+		[left,top],
+		[right,top],
+		[right,bottom],
+		[left,bottom]
 	]
 	
-	var moveBack = [center[0], center[1], 0]
-	var moveToOrigin = [-center[0], -center[1], 10]
-	
-	var perspective = Mat4.perspective([], Math.PI * 0.6, window.innerWidth / window.outerWidth, 5, 15)
-	
-	// Mat4.translate( matA, matB, moveBack )
-	Mat4.multiply( matB, matA, perspective)
-	// Mat4.rotateZ( matA, matB, theta )
-	Mat4.rotateY( matA, matB, Math.PI * 0.1 )
-	Mat4.translate( matB, matA, [0,0,10] )
-	// Mat4.translate( matB, matA, moveToOrigin )
-	// Mat4.translate( matA, matB, moveToOrigin )
-	
-	return _matrixArrayToCssMatrix(matB)
+	return function clipBars( line ) {
+		try {
+			var result = PolygonBoolean( line, bounds, 'and' )
+			if( result.length > 0 ) {
+				return result[0]
+			} else {
+				return false
+			}
+			return result
+		} catch (err) {
+			return false
+		}		
+	}
 }
 
-function _drawBars( bounds, config, random ) {
+function _transformBars( transform, bounds, rotation, line ) {
+	
+	var mat = transform.mat
+	var height = transform.height
+	var perspective = transform.perspective
+	var center = bounds.center
+	
+	mat( true ) //reset mat flipper
+	
+	Mat4.translate ( mat(), mat(), [center[0], center[1], 0] ) // to final position
+	Mat4.scale     ( mat(), mat(), [height,height,height] )    // scale back from clip space
+	Mat4.multiply  ( mat(), mat(), perspective )               // project
+	Mat4.translate ( mat(), mat(), [0,0,-height] )             // camera position
+	Mat4.rotateZ   ( mat(), mat(), rotation[2] )         // rotate bar
+	Mat4.rotateY   ( mat(), mat(), rotation[1] )         // rotate bar
+	Mat4.rotateX   ( mat(), mat(), rotation[0] )         // rotate bar
+	
+	var transformedMatrix = (mat(),mat())
+	
+	return _multiplyLine( line, transformedMatrix )
+}
+
+function _drawBars( bounds, config, random, transform ) {
 	
 	var $g = $(Svg.create('g'))
 	
 	var density = config.density + random.float(-config.densityRange, config.densityRange) * 0.5
 	var barCount = Math.min(50, Math.floor(bounds.diagonal / density))
 	var step = bounds.diagonal / barCount
-	var left = bounds.center[0] - bounds.diagonal * 0.5
-	var top = bounds.center[1] - bounds.diagonal * 0.5
 	
-	_.times( barCount, function( i ) {
+	var rotation = [
+		config.rotationX + random.float( -config.rotationXRange, config.rotationXRange ),
+		config.rotationY + random.float( -config.rotationYRange, config.rotationYRange ),
+		config.rotationZ + random.float( -config.rotationZRange, config.rotationZRange )
+	]
+	
+	var iterations = barCount * config.overdraw
+	
+	var clipBars = _clipBarsFn( bounds.center, bounds.diagonal * 0.5 )
+	
+	_.times( iterations, function( j ) {
 		
-		var $rect = $(Svg.create('rect'))
-		$rect.attr({
-			x: left,
-			y: top + step * i,
-			width: bounds.diagonal,
-			height: step * 0.5,
-			style: "stroke:none; fill:rgba(0,0,0,1)"
-		})
+		// Adjust for the overdraw
+		var i = j - (iterations - barCount) / config.overdraw
+
+		var left   = config.widthScale * 2 * -bounds.diagonal
+		var right  = config.widthScale * 2 * bounds.diagonal
+		var top    = bounds.diagonal * -0.25 + step * i
+		var bottom = top + step * 0.5
 		
-		$g.css({
-			"transform" : "rotateY("+random.float(0, config.rotationRange)+")"
-		})
-		$g.append( $rect )
+		var line = [
+			[left,top],
+			[right,top],
+			[right,bottom],
+			[left,bottom]
+		]
+		
+		var transformedLine = _transformBars( transform, bounds, rotation, line )
+		var clippedLine = clipBars( transformedLine )
+
+		if( clippedLine ) {
+			var $bar = $(Svg.create('polygon'))
+		
+			$bar.attr({
+				points: Svg.points( clippedLine ),
+				style: "stroke:none; fill:rgba(0,0,0,1)"
+			})
+		
+			$g.append( $bar )
+		}
 	})
 	
 	return $g
@@ -318,24 +223,51 @@ function _drawFillColors( random, bounds, el ) {
 	$(el).append( $rect )
 }
 
-module.exports = function dazzleFn( props ) {
+function _sharedTransformData($svg) {
+
+	var width = $svg.width()
+	var height = $svg.height()
+	var perspective = Mat4.perspective(
+		[],
+		Math.PI * 0.5, //fov
+		width / height, //ratio
+		height*0.1, //near
+		height*1.0 //far
+	)
+	
+	return {
+		width: width,
+		height: height,
+		mat : _flipMatricesFn(),
+		perspective : perspective
+	}
+}
+
+module.exports = function dazzleFn( props, $svg ) {
 	
 	var config = _.extend({
 		variation : 0,
+		overdraw : 2,
 		density : 100,
 		densityRange : 5,
-		rotation : Math.PI * 0.2,
-		rotationRange : Math.PI * 0.2
+		widthScale : 1,
+		rotationX : 0,
+		rotationY : 0,
+		rotationZ : 0,
+		rotationXRange : 0,
+		rotationYRange : 0,
+		rotationZRange : 0,
 	}, props)
 
 	var random = SeedRandom( "Dazzle" + props.variation )
+	var transform = _sharedTransformData( $svg )
 	
 	return function dazzle( [el, line, center] ) {
 
 		var bounds = _cellBounds( line )
 		
 		_drawFillColors( random, bounds, el )
-		var bars = _drawBars( bounds, config, random )
+		var bars = _drawBars( bounds, config, random, transform )
 		
 		$(el).append( bars )
 		// _drawCenterDots( el, center )
