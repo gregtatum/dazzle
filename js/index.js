@@ -28,6 +28,8 @@ function _drawFn( props ) {
 			variation : 0
 		},
 		dazzle : {
+			enableDazzle : true,
+			enableColors : true,
 			variation : 0,
 			density : 100,
 			densityRange : 5,
@@ -51,6 +53,8 @@ function _drawFn( props ) {
 	gui.add(props.voronoi, 'variation', 0, 50).step(1).onFinishChange( draw )
 	
 	gui.addFolder('Dazzle')
+	gui.add(props.dazzle, 'enableDazzle').onFinishChange( draw )
+	gui.add(props.dazzle, 'enableColors').onFinishChange( draw )
 	gui.add(props.dazzle, 'variation', 0, 50).step(1).onFinishChange( draw )
 	gui.add(props.dazzle, 'density', 5, 200).step(1).onFinishChange( draw )
 	gui.add(props.dazzle, 'densityRange', 0, 200).step(1).onFinishChange( draw )

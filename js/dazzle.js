@@ -205,6 +205,15 @@ function _drawCenterDots( el, center ) {
 	$(el).append( $circle )
 }
 
+function _componentToHex(c) {
+    var hex = c.toString(16);
+    return hex.length == 1 ? "0" + hex : hex;
+}
+
+function _rgbToHex(r, g, b) {
+    return "#" + _componentToHex(r) + _componentToHex(g) + _componentToHex(b);
+}
+
 function _drawFillColors( random, bounds, el ) {
 	
 	var $rect = $(Svg.create('rect'))
@@ -218,7 +227,9 @@ function _drawFillColors( random, bounds, el ) {
 		y: bounds.top,
 		width: bounds.width,
 		height: bounds.height,
-		style: "stroke:none; fill:rgba("+r+","+g+","+b+",0.3)"
+		fill: _rgbToHex(r, g, b ),
+		stroke: "none",
+		opacity: 0.2,
 	})
 	$(el).append( $rect )
 }
@@ -246,6 +257,8 @@ function _sharedTransformData($svg) {
 module.exports = function dazzleFn( props, $svg ) {
 	
 	var config = _.extend({
+		enableDazzle : true,
+		enableColors : true,
 		variation : 0,
 		overdraw : 2,
 		density : 100,
@@ -263,14 +276,20 @@ module.exports = function dazzleFn( props, $svg ) {
 	var transform = _sharedTransformData( $svg )
 	
 	return function dazzle( [el, line, center] ) {
-
+		
 		var bounds = _cellBounds( line )
+
+		if( config.enableColors ) {
 		
-		_drawFillColors( random, bounds, el )
-		var bars = _drawBars( bounds, config, random, transform )
+			_drawFillColors( random, bounds, el )
+		}
 		
-		$(el).append( bars )
-		// _drawCenterDots( el, center )
+		if( config.enableDazzle ) {
+			
+			var bars = _drawBars( bounds, config, random, transform )
+			$(el).append( bars )
+			// _drawCenterDots( el, center )
+		}
 		
 	}
 }
